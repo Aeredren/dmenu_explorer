@@ -1,0 +1,7 @@
+#!/bin/sh
+# This code is trivial and not subject to copyright laws.
+# ~Aeredren
+
+[ -z $1 ] && cd $HOME || cd $1
+EXF="$(realpath "$(ls -ap . | dmenu -b -i)")"
+[ -d "$EXF" ] && dmenu_explorer "$EXF" || xdg-open "$EXF" & >> /dev/null
