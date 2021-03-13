@@ -1,7 +1,30 @@
 #!/bin/sh
-# This code is trivial and not subject to copyright laws.
-# ~Aeredren
+# This code is publish under GPLv3 or later verions. See COPYING file
+# ~Aeredren (Romain Lebrun Thauront <romain.lebrun-thauront at protonmail.com>)
+
+lister () {
+	[ $LIST -eq 0 ] && printf "../\n./\n$(ls -p .)" || echo "$(ls -ap .)"
+}
 
 [ -z $1 ] && cd $HOME || cd $1
-EXF="$(realpath "$(ls -ap . | dmenu -b -i)")"
-[ -d "$EXF" ] && dmenu_explorer "$EXF" || xdg-open "$EXF" & >> /dev/null
+[ -z $2 ] && LIST=0 || LIST=$2
+
+INPUT="$(lister | dmenu -b -i)"
+case $INPUT in
+	"\\")
+		dmenu_explorer $PWD $LIST &
+		;;
+	":")
+		dmenu_explorer_command $PWD $LIST &
+		;;
+	".")
+		[ $LIST -eq 0 ] && LIST=1 || LIST=0
+		dmenu_explorer $PWD $LIST &
+		;;
+	"./")
+		xdg-open "$INPUT" & >> /dev/null
+		;;
+	*)
+		[ -d "$INPUT" ] && dmenu_explorer "$INPUT" $LIST || xdg-open "$INPUT" & >> /dev/null
+		;;
+esac
