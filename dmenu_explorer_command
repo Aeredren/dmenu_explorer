@@ -8,21 +8,20 @@ lister () {
 
 
 command_input () {
-	cd $1
-	INPUT="$(lister | dmenu -nf "red" -sb "red" -b -i)"
+	INPUT="$(dmenu_path | dmenu -nf "red" -sb "red" -b -i)"
 	case $INPUT in
+		"")
+			dmenu_explorer $DIR $LIST &
+			;;
 		"\\")
 			dmenu_explorer $DIR $LIST &
 			;;
 		":")
-			command_input /usr/bin &
-			;;
-		".")
-			[ $LIST -eq 0 ] && LIST=1 || LIST=0
-			command_input $PWD &
+			command_input &
 			;;
 		*)
-			[ -d "$INPUT" ] && command_input "$INPUT" || (COMMAND="$INPUT" ; arg_input $DIR)
+			COMMAND="$INPUT"
+			arg_input $DIR
 			;;
 	esac
 }
@@ -32,21 +31,13 @@ arg_input () {
 	BUFFER="$(lister | dmenu -nf "blue" -sb "blue" -b -i | sed -e :a -e '$!N;s/ *\n */ /;ta' -e 'P;D')"
 	INPUT=${BUFFER##* }
 	ARGUMENTS="$ARGUMENTS $(realpath ${BUFFER%$INPUT})"
-
-	#echo "BUFFER IS : $BUFFER"
-	#echo "INPUT IS : $INPUT"
-	#echo "ARGUMENTS IS : $ARGUMENTS"
-	#echo
 	
 	case $INPUT in
 		"\\")
 			dmenu_explorer $PWD $LIST &
 			;;
 		":")
-			unset BUFFER
-			unset INPUT
-			unset ARGUMENTS
-			command_input /usr/bin &
+			dmenu_explorer_command $PWD $LIST &
 			;;
 		".")
 			[ $LIST -eq 0 ] && LIST=1 || LIST=0
@@ -56,7 +47,7 @@ arg_input () {
 			ARGUMENTS="$ARGUMENTS $INPUT" ; [ -z $COMMAND ] || "$COMMAND $ARGUMENTS"
 			;;
 		*)
-			[ -d "$INPUT" ] && arg_input "$INPUT" || (ARGUMENTS="$ARGUMENTS $INPUT" ; [ -z $COMMAND ] || $COMMAND $ARGUMENTS)
+			[ -d "$INPUT" ] && arg_input "$INPUT" || ($COMMAND $ARGUMENTS $INPUT ; dmenu_explorer_command $PWD $LIST &)
 			;;
 	esac
 	
@@ -64,5 +55,5 @@ arg_input () {
 
 [ -z $1 ] && DIR=$HOME || DIR=$1
 [ -z $2 ] && LIST=0 || LIST=$2
-command_input /usr/bin
+command_input
 
